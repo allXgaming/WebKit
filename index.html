@@ -29,10 +29,7 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .fade-in-up {
-            opacity: 0;
-            animation: fadeInUp 0.6s ease-out forwards;
-        }
+        .fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
 
         /* --- Professional Look & Feel --- */
         .header-glow { text-shadow: 0 0 15px rgba(34, 211, 238, 0.5); }
@@ -44,7 +41,7 @@
             cursor: pointer;
         }
         .tool-card:hover:not(.disabled) {
-            transform: translateY(-6px);
+            transform: translateY(-8px);
             border-color: rgba(34, 211, 238, 0.6);
             box-shadow: 0 10px 25px -5px rgba(34, 211, 238, 0.2), 0 0 15px rgba(34, 211, 238, 0.1);
         }
@@ -70,108 +67,126 @@
             border-radius: 2px;
             background: linear-gradient(to bottom, var(--accent-cyan), var(--accent-cyan-dark));
         }
-        .section-divider {
-            background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.3), transparent);
-        }
         
-        /* --- Sidebar & Menu Button --- */
-        #sidebar-menu {
-            transform: translateX(-100%);
-            transition: transform 0.3s ease-in-out;
-            z-index: 50;
+        /* --- Tool Viewer (Iframe Container) --- */
+        #tool-viewer {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-dark);
+            z-index: 100;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        #sidebar-menu.active { transform: translateX(0); }
-        .sidebar-link:hover { background-color: rgba(34, 211, 238, 0.1); }
-        .sidebar-link.active {
-            background-color: rgba(34, 211, 238, 0.2);
-            color: #22d3ee;
+        #tool-viewer.active { transform: translateY(0); }
+        #tool-iframe {
+            width: 100%;
+            height: calc(100% - 60px); /* Adjust for header */
+            border: none;
         }
-        .sidebar-text { text-shadow: 0 0 8px rgba(34, 211, 238, 0.4); }
 
-        #menu-toggle-btn {
-            background: rgba(31, 41, 55, 0.8);
+        /* --- Modals --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 110;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .modal-overlay:not(.hidden) {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background-color: var(--bg-light);
+            padding: 2rem;
+            border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.2s ease;
+            max-width: 90%;
+            width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
         }
-        #menu-toggle-btn:hover {
-            background-color: var(--accent-cyan-dark);
-            border-color: var(--accent-cyan);
-        }
-        
-        /* Utility styles */
-        .grid-section { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1.25rem; }
-        .section-title { position: relative; padding-left: 1rem; margin-bottom: 1.5rem; }
-        #sidebar-overlay { position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.6); z-index: 40; transition: opacity 0.3s ease-in-out; }
-        #sidebar-menu { position: fixed; top: 0; left: 0; width: 280px; height: 100%; padding: 1.5rem; border-right: 1px solid rgba(34, 211, 238, 0.2); background: var(--bg-light); }
-        .sidebar-link { display: flex; align-items: center; padding: 0.75rem 0.5rem; border-radius: 8px; font-size: 1.1rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s ease, color 0.2s ease; }
-        .sidebar-icon { font-size: 1.5rem; margin-right: 1rem; width: 30px; text-align: center; }
-
     </style>
 </head>
 <body class="min-h-screen">
 
-    <!-- Sidebar and Overlay -->
-    <div id="sidebar-overlay" class="hidden opacity-0"></div>
-    <nav id="sidebar-menu">
-        <h2 class="text-2xl font-bold text-white mb-6 pl-2 header-glow">Categories</h2>
-        <ul id="category-list" class="space-y-2"></ul>
-    </nav>
-    
-    <!-- Main Content Container -->
-    <div id="mainContent">
-        <header class="py-6 px-4 text-center">
-            <h1 class="text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-gray-200 to-cyan-300 header-glow">
-                Web Kit
-            </h1>
-            <p class="mt-2 text-cyan-200 text-lg">The Ultimate Tools Collection</p>
-            
-            <div class="max-w-xl mx-auto mt-8 flex items-center justify-center gap-3">
-                <div class="flex-grow max-w-lg bg-gray-900/50 backdrop-blur-sm rounded-full px-4 py-2.5 shadow-lg border border-gray-700 focus-within:border-cyan-400 transition-colors">
-                    <div class="flex items-center">
-                        <input type="text" id="search-input" placeholder="Search tools..." class="w-full bg-transparent border-none focus:outline-none text-white placeholder-gray-400" autocomplete="off">
-                        <button id="search-btn" class="ml-2 text-gray-400 hover:text-cyan-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                        </button>
+    <!-- Hub Container -->
+    <div id="hub-container">
+        <!-- Sidebar and Overlay -->
+        <div id="sidebar-overlay" class="hidden fixed inset-0 bg-black bg-opacity-60 z-40 transition-opacity"></div>
+        <nav id="sidebar-menu" class="fixed top-0 left-0 h-full w-64 bg-gray-800 p-6 z-50 transform -translate-x-full transition-transform">
+            <h2 class="text-2xl font-bold text-white mb-6 header-glow">Categories</h2>
+            <ul id="category-list" class="space-y-2"></ul>
+        </nav>
+        
+        <!-- Main Content Container -->
+        <div id="mainContent">
+            <header class="py-6 px-4 text-center">
+                <h1 class="text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-gray-200 to-cyan-300 header-glow">
+                    Web Kit
+                </h1>
+                <p class="mt-2 text-cyan-200 text-lg">The Ultimate Tools Collection</p>
+                
+                <div class="max-w-xl mx-auto mt-8 flex items-center justify-center gap-3">
+                    <div class="flex-grow max-w-lg bg-gray-900/50 backdrop-blur-sm rounded-full px-4 py-2.5 shadow-lg border border-gray-700 focus-within:border-cyan-400 transition-colors">
+                        <input type="text" id="search-input" placeholder="Search for tools..." class="w-full bg-transparent border-none focus:outline-none text-white placeholder-gray-400" autocomplete="off">
                     </div>
+                    <button id="menu-toggle-btn" class="p-3 rounded-full bg-gray-800/80 border border-gray-700">
+                        <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m4 6h16" /></svg>
+                    </button>
                 </div>
-                <button id="menu-toggle-btn" class="p-3 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
-            </div>
+            </header>
+
+            <main class="container mx-auto px-4 py-8">
+                <section id="new-section" class="mb-12"><h2 class="text-2xl font-bold text-white section-title relative pl-4 mb-6">New Tools</h2><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5" id="new-tools"></div></section>
+                <section id="popular-section" class="my-12"><h2 class="text-2xl font-bold text-white section-title relative pl-4 mb-6">Popular Tools</h2><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5" id="popular-tools"></div></section>
+                <section id="coming-soon-section" class="my-12"><h2 class="text-2xl font-bold text-white section-title relative pl-4 mb-6">Coming Soon</h2><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5" id="coming-soon-tools"></div></section>
+            </main>
+
+            <footer class="py-6 border-t border-gray-800 mt-12">
+                 <div class="container mx-auto px-4 text-center text-gray-400 text-sm">
+                    <div id="footer-links" class="flex justify-center gap-4 mb-4">
+                        <a href="#" class="hover:text-cyan-300" data-page="terms">Terms</a>
+                        <a href="#" class="hover:text-cyan-300" data-page="privacy">Privacy</a>
+                        <a href="#" class="hover:text-cyan-300" data-page="contact">Contact</a>
+                    </div>
+                    <p>© 2025 WebKit. All rights reserved.</p>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Tool Viewer (Iframe Layer) -->
+    <div id="tool-viewer">
+        <header class="h-[60px] bg-gray-800 flex items-center justify-between px-4 border-b border-gray-700">
+            <h2 id="tool-title" class="text-xl font-bold text-white truncate">Tool Title</h2>
+            <button id="back-to-hub-btn" class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Back to Hub</button>
         </header>
+        <iframe id="tool-iframe" title="Tool Content"></iframe>
+    </div>
 
-        <main class="container mx-auto px-4 py-8">
-            <section id="new-section" class="mb-12 fade-in-up">
-                <h2 class="text-2xl font-bold text-white section-title">New Tools</h2>
-                <div class="grid-section" id="new-tools"></div>
-            </section>
-            
-            <div class="section-divider fade-in-up" style="animation-delay: 0.2s;"></div>
-            
-            <section id="popular-section" class="my-12 fade-in-up" style="animation-delay: 0.3s;">
-                <h2 class="text-2xl font-bold text-white section-title">Popular Tools</h2>
-                <div class="grid-section" id="popular-tools"></div>
-            </section>
-            
-            <div class="section-divider fade-in-up" style="animation-delay: 0.5s;"></div>
-            
-            <section id="coming-soon-section" class="my-12 fade-in-up" style="animation-delay: 0.6s;">
-                <h2 class="text-2xl font-bold text-white section-title">Coming Soon</h2>
-                <div class="grid-section" id="coming-soon-tools"></div>
-            </section>
-        </main>
-
-        <footer class="py-6 border-t border-gray-800 mt-12">
-             <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
-                <p>© 2025 WebKit. All rights reserved.</p>
+    <!-- Modals -->
+    <div id="maintenance-modal" class="modal-overlay hidden">
+        <div class="modal-content text-center"><h2 class="text-3xl font-bold text-cyan-300 mb-4">Under Maintenance</h2><p id="maintenance-message" class="text-lg">We'll be back shortly.</p></div>
+    </div>
+    <div id="page-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="page-modal-title" class="text-2xl font-bold text-cyan-300"></h2>
+                <button id="page-modal-close" class="text-2xl text-gray-400 hover:text-white">&times;</button>
             </div>
-        </footer>
+            <div id="page-modal-content" class="text-gray-300 prose prose-invert max-w-none"></div>
+        </div>
     </div>
 
     <script>
-    // --- Firebase Configuration (Placeholder) ---
+    // --- Firebase Configuration ---
     // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyAYA7KkyMjuspnNjaxBAiWUUtCb_bJDuhQ",
@@ -183,170 +198,183 @@ const firebaseConfig = {
   appId: "1:786753674701:web:746c0bad857eec0b2df884",
   measurementId: "G-CGWL05MEDT"
 };
-    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
     // --- DOM Elements & State ---
+    const hubContainer = document.getElementById('hub-container');
+    const toolViewer = document.getElementById('tool-viewer');
+    const toolIframe = document.getElementById('tool-iframe');
+    const toolTitle = document.getElementById('tool-title');
+    const backToHubBtn = document.getElementById('back-to-hub-btn');
     const searchInput = document.getElementById('search-input');
-    const searchBtn = document.getElementById('search-btn');
-    const menuToggleBtn = document.getElementById('menu-toggle-btn');
-    const sidebarMenu = document.getElementById('sidebar-menu');
-    const sidebarOverlay = document.getElementById('sidebar-overlay');
-    const categoryList = document.getElementById('category-list');
-    let currentCategoryFilter = 'All Tools';
-    let allTools = []; // To store tools fetched from Firebase
+    
+    // Modals
+    const maintenanceModal = document.getElementById('maintenance-modal');
+    const maintenanceMessage = document.getElementById('maintenance-message');
+    const pageModal = document.getElementById('page-modal');
+    const pageModalTitle = document.getElementById('page-modal-title');
+    const pageModalContent = document.getElementById('page-modal-content');
+    const pageModalClose = document.getElementById('page-modal-close');
 
-    // --- Data ---
+    let allTools = [];
+    let currentCategoryFilter = 'All Tools';
+    
+    // --- Categories ---
     const categories = [
-        { name: 'All Tools', icon: '🌟' },
-        { name: 'Finance Tools', icon: '💰' },
-        { name: 'PDF Tools', icon: '📄' },
-        { name: 'Image Tools', icon: '🖼️' },
-        { name: 'Converters', icon: '🔄' },
-        { name: 'Generators', icon: '🔧' },
-        { name: 'Utilities', icon: '🧰' }
+        { name: 'All Tools', icon: '🌟' }, { name: 'Finance Tools', icon: '💰' },
+        { name: 'PDF Tools', icon: '📄' }, { name: 'Image Tools', icon: '🖼️' },
+        { name: 'Converters', icon: '🔄' }, { name: 'Generators', icon: '🔧' }
     ];
 
-    // --- Functions ---
-    const toggleMenu = () => {
-        const isActive = sidebarMenu.classList.contains('active');
-        if (isActive) {
-            sidebarMenu.classList.remove('active');
-            sidebarOverlay.classList.add('opacity-0');
-            setTimeout(() => sidebarOverlay.classList.add('hidden'), 300);
-        } else {
-            sidebarMenu.classList.add('active');
-            sidebarOverlay.classList.remove('hidden');
-            setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
-        }
-    };
-
-    const renderSidebarCategories = () => {
-        categoryList.innerHTML = categories.map(category => `
-            <li>
-                <a class="sidebar-link" data-category="${category.name}">
-                    <span class="sidebar-icon">${category.icon}</span>
-                    <span class="sidebar-text">${category.name}</span>
-                </a>
-            </li>
-        `).join('');
-        document.querySelector('.sidebar-link[data-category="All Tools"]').classList.add('active');
-    };
-
-    const renderTools = (toolsToRender, containerId) => {
+    // --- Core Functions ---
+    const renderTools = (tools, containerId) => {
         const container = document.getElementById(containerId);
         container.innerHTML = "";
-        if (toolsToRender.length === 0) {
-            container.innerHTML = `<div class="col-span-full text-center p-8 text-gray-400">No tools found for this criteria.</div>`;
+        if (!tools.length) {
+            container.innerHTML = `<p class="col-span-full text-center text-gray-400">No tools found.</p>`;
             return;
         }
-        toolsToRender.forEach(tool => {
-            const toolCard = document.createElement('div');
-            const isToolDisabled = tool.isComingSoon || !tool.firebaseId;
-            
-            toolCard.className = `tool-card rounded-xl overflow-hidden ${isToolDisabled ? 'disabled' : ''}`;
-            if (isToolDisabled) {
-                toolCard.setAttribute('title', 'Coming Soon...');
-            }
-
-            toolCard.innerHTML = `
-                <div class="relative pt-[100%]">
-                    <img src="${tool.imageURL || 'https://images.unsplash.com/photo-1543286386-2e6593068625?q=80&w=2070&auto=format&fit=crop'}" alt="${tool.title}" class="absolute top-0 left-0 w-full h-full object-cover">
+        tools.forEach(tool => {
+            const isDisabled = tool.isComingSoon || !tool.firebaseId;
+            const card = document.createElement('div');
+            card.className = `tool-card rounded-xl overflow-hidden ${isDisabled ? 'disabled' : ''}`;
+            card.innerHTML = `
+                <div class="relative pt-[100%] bg-gray-700">
+                    <img src="${tool.imageURL || 'https://via.placeholder.com/300'}" alt="${tool.title}" class="absolute top-0 left-0 w-full h-full object-cover">
                 </div>
                 <div class="p-3">
                     <h3 class="font-medium truncate">${tool.title}</h3>
-                    <span class="inline-block mt-1 px-2 py-1 text-xs rounded-full category-tag">
-                        ${tool.category}
-                    </span>
+                    <span class="inline-block mt-1 px-2 py-1 text-xs rounded-full category-tag">${tool.category}</span>
                 </div>`;
-
-            if (!isToolDisabled) {
-                toolCard.addEventListener('click', () => {
-                    const toolRef = database.ref('tools/' + tool.firebaseId);
-                    toolRef.once('value')
-                        .then((snapshot) => {
-                            const toolData = snapshot.val();
-                            if (toolData && toolData.htmlCode) {
-                                // Open a new tab and render the HTML code
-                                const newTab = window.open();
-                                newTab.document.open();
-                                newTab.document.write(toolData.htmlCode);
-                                newTab.document.close();
-                            } else {
-                                alert(`The tool "${tool.title}" is currently unavailable or has no content.`);
-                                console.warn(`htmlCode not found in Firebase for toolId: ${tool.firebaseId}`);
-                            }
-                        })
-                        .catch((error) => {
-                            console.error("Error fetching tool data from Firebase: ", error);
-                            alert("Failed to load tool data. Please check your connection and try again.");
-                        });
-                });
-            }
-            container.appendChild(toolCard);
+            if (!isDisabled) card.addEventListener('click', () => loadToolInViewer(tool));
+            container.appendChild(card);
         });
     };
-    
+
     const filterAndRenderAllSections = () => {
         const searchTerm = searchInput.value.toLowerCase();
-        const filteredTools = allTools.filter(tool => {
-            const categoryMatch = currentCategoryFilter === 'All Tools' || tool.category === currentCategoryFilter;
-            const searchMatch = tool.title.toLowerCase().includes(searchTerm);
-            return categoryMatch && searchMatch;
-        });
+        const filteredTools = allTools.filter(tool => 
+            (currentCategoryFilter === 'All Tools' || tool.category === currentCategoryFilter) &&
+            tool.title.toLowerCase().includes(searchTerm)
+        );
 
         renderTools(filteredTools.filter(t => t.isNew && !t.isComingSoon), 'new-tools');
         renderTools(filteredTools.filter(t => t.isPopular && !t.isComingSoon), 'popular-tools');
         renderTools(filteredTools.filter(t => t.isComingSoon), 'coming-soon-tools');
     };
-    
+
+    const loadToolInViewer = (tool) => {
+        database.ref('tools/' + tool.firebaseId).once('value')
+            .then(snapshot => {
+                const toolData = snapshot.val();
+                if (toolData && toolData.htmlCode) {
+                    toolTitle.textContent = tool.title;
+                    toolIframe.srcdoc = toolData.htmlCode;
+                    toolViewer.classList.add('active');
+                    hubContainer.style.display = 'none';
+                } else {
+                    alert(`Error: The tool "${tool.title}" could not be loaded.`);
+                }
+            }).catch(error => alert("Failed to load tool content."));
+    };
+
+    const hideToolViewer = () => {
+        toolViewer.classList.remove('active');
+        hubContainer.style.display = 'block';
+        toolIframe.srcdoc = ''; 
+    };
+
+    // --- Firebase Data Fetching ---
     const fetchToolsFromFirebase = () => {
-        const toolsRef = database.ref('tools');
-        toolsRef.on('value', (snapshot) => {
+        database.ref('tools').on('value', snapshot => {
             const data = snapshot.val();
-            if (data) {
-                allTools = Object.keys(data).map(key => ({
-                    firebaseId: key,
-                    ...data[key]
-                }));
-            } else {
-                allTools = [];
+            allTools = data ? Object.keys(data).map(key => ({ firebaseId: key, ...data[key] })) : [];
+            filterAndRenderAllSections();
+        }, error => alert("Could not connect to the database."));
+    };
+
+    const checkMaintenanceStatus = () => {
+        database.ref('maintenance').once('value', snapshot => {
+            const data = snapshot.val();
+            if (data && data.isActive) {
+                maintenanceMessage.textContent = data.message || "We'll be back shortly.";
+                maintenanceModal.classList.remove('hidden');
             }
-            filterAndRenderAllSections(); // Re-render after fetching
-        }, (error) => {
-            console.error("Firebase Read Failed: " + error.code);
-            alert("Could not fetch tools from the database.");
         });
+    };
+    
+    // --- Page/Modal Handling ---
+    const showPageModal = (pageKey) => {
+        database.ref('pages/' + pageKey).once('value', snapshot => {
+            const data = snapshot.val();
+            // BUG FIX: Ensure data and its properties exist before showing the modal
+            if (data && data.title && data.content) {
+                pageModalTitle.textContent = data.title;
+                pageModalContent.innerHTML = data.content; 
+                pageModal.classList.remove('hidden');
+            } else {
+                alert(`The content for "${pageKey}" could not be found or is empty.`);
+            }
+        });
+    };
+    
+    // --- Sidebar and Category Logic ---
+    const sidebarMenu = document.getElementById('sidebar-menu');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const menuToggleBtn = document.getElementById('menu-toggle-btn');
+    const categoryList = document.getElementById('category-list');
+    
+    const toggleMenu = () => {
+        sidebarMenu.classList.toggle('-translate-x-full');
+        sidebarOverlay.classList.toggle('hidden');
+    }
+    
+    const renderCategories = () => {
+        categoryList.innerHTML = categories.map(cat => `
+            <li>
+                <a class="flex items-center p-2 rounded-lg cursor-pointer hover:bg-gray-700" data-category="${cat.name}">
+                    <span class="mr-3 text-xl">${cat.icon}</span>
+                    <span>${cat.name}</span>
+                </a>
+            </li>
+        `).join('');
+        // Set 'All Tools' as active by default
+        categoryList.querySelector('a').classList.add('bg-gray-700');
     };
 
     // --- Event Listeners ---
+    searchInput.addEventListener('input', filterAndRenderAllSections);
+    backToHubBtn.addEventListener('click', hideToolViewer);
     menuToggleBtn.addEventListener('click', toggleMenu);
     sidebarOverlay.addEventListener('click', toggleMenu);
-    
-    searchInput.addEventListener('input', filterAndRenderAllSections);
-    searchBtn.addEventListener('click', filterAndRenderAllSections);
-    searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') filterAndRenderAllSections(); });
 
-    categoryList.addEventListener('click', (e) => {
-        const link = e.target.closest('.sidebar-link');
-        if (link) {
-            document.querySelector('.sidebar-link.active')?.classList.remove('active');
-            link.classList.add('active');
+    categoryList.addEventListener('click', e => {
+        const link = e.target.closest('a');
+        if (link && link.dataset.category) {
+            // Update active state
+            categoryList.querySelector('a.bg-gray-700')?.classList.remove('bg-gray-700');
+            link.classList.add('bg-gray-700');
             
             currentCategoryFilter = link.dataset.category;
             filterAndRenderAllSections();
-            if (window.innerWidth < 768) { // Close sidebar on mobile after selection
-                toggleMenu();
-            }
+            if (window.innerWidth < 768) toggleMenu();
         }
     });
-    
+
+    document.getElementById('footer-links').addEventListener('click', e => {
+        e.preventDefault();
+        if (e.target.dataset.page) showPageModal(e.target.dataset.page);
+    });
+
+    pageModalClose.addEventListener('click', () => pageModal.classList.add('hidden'));
+
     // --- Initial Load ---
-    window.onload = () => {
-        renderSidebarCategories();
+    document.addEventListener('DOMContentLoaded', () => {
+        renderCategories();
+        checkMaintenanceStatus();
         fetchToolsFromFirebase();
-    };
+    });
     </script>
 </body>
 </html>
